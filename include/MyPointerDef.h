@@ -1,6 +1,20 @@
 #pragma once
 #include "../src/MyPointer.h"
 #include <iostream>
+
+
+template<typename T>
+inline ControlBlock<T>::ControlBlock(T* ptr)
+	:m_useCount(1),m_weakCount(0),m_ptr(ptr)
+{
+}
+
+template<typename T>
+inline ControlBlock<T>::~ControlBlock()
+{
+	delete m_ptr;
+}
+
 namespace MyPointer {
 	template<typename T>
 	inline Auto_ptr<T>::Auto_ptr(T* ptr)
@@ -103,16 +117,8 @@ namespace MyPointer {
 	}
 
 
-	template<typename T>
-	inline MyPointer::Shared_ptr<T>::ControlBlock::ControlBlock(T* ptr)
-		:m_useCount(1), m_ptr(ptr)
-	{
-	}
-	template<typename T>
-	inline Shared_ptr<T>::ControlBlock::~ControlBlock()
-	{
-		delete m_ptr;
-	}
+
+
 	template<typename T>
 	inline MyPointer::Shared_ptr<T>::Shared_ptr()
 		:m_control(nullptr)

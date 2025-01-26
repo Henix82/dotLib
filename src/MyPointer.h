@@ -1,9 +1,25 @@
 #pragma once
 #include <utility>
 #include <iostream>
-namespace MyPointer {
 
-	
+//Блок контроля, хранящий число указателей, указывающих на объект, указатель на объект
+//Указатель помещен в блок контроля для централизации хранения и удаления данных
+template<typename T>
+struct ControlBlock {
+	//Кол-во использований
+	size_t m_useCount;
+	//Кол-во 
+	size_t m_weakCount;
+	//Указатель
+	T* m_ptr;
+	//Конструктор инициализации контрольного блока
+	ControlBlock(T* ptr);
+	//Деструктор(удаляет выделенную память)
+	~ControlBlock();
+};
+
+namespace MyPointer 
+{
 	template <typename T>
 	//Устаревший указатель
 	class Auto_ptr {
@@ -53,21 +69,9 @@ namespace MyPointer {
 	template <typename T>
 	//Умный указатель, обеспечивающий множественное владение объектом
 	class Shared_ptr {
-		//Блок контроля, хранящий число указателей, указывающих на объект, указатель на объект
-		//Указатель помещен в блок контроля для централизации хранения и удаления данных
-		struct ControlBlock {
-			//Кол-во использований
-			size_t m_useCount;
-			//Указатель
-			T* m_ptr;
-			//Конструктор инициализации контрольного блока
-			ControlBlock(T* ptr);
-			//Деструктор(удаляет выделенную память)
-			~ControlBlock();
-		};
 		//Указатель на экземпляр контрольного блока, небходим для того, чтобы другие
 		//экземпляры Shared_ptr могли его хранить (множественное владение)
-		ControlBlock* m_control;
+		ControlBlock<T>* m_control;
 	public:
 		//Конструктор (присваивает nullptr контрольному блоку)
 		Shared_ptr();
@@ -96,6 +100,12 @@ namespace MyPointer {
 	private:
 		//Реализация деструктора
 		void release();
+	};
+
+	template<typename T>
+	//
+	class Weak_ptr {
+
 	};
 
 	namespace Help {
