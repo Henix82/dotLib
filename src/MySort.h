@@ -65,14 +65,20 @@ namespace MySort {
 		return a > b;  // Функция по умолчанию для сортировки по возрастанию
 		}) 
 	{
+		bool swaped = false;
 		auto length = arr.size();
 		for (size_t i = length-1; i > 0; i--)
 		{
+			swaped = false;
 			for (size_t j = 1; j <= i; j++)
 			{
 				if (compare(arr[j - 1], arr[j])) {
 					std::swap(arr[j - 1], arr[j]);
+					swaped = true;
 				}
+			}
+			if (!swaped) {
+				break;
 			}
 		}
 	}
