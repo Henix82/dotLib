@@ -130,6 +130,17 @@ namespace MyPointer {
 	{
 	}
 	template<typename T>
+	inline Shared_ptr<T>::Shared_ptr(const Weak_ptr<T>& weak)
+	{
+		if (weak.m_control && weak.m_control->m_useCount>0) {
+			m_control = weak.m_control;
+			++m_control->m_useCount;
+		}
+		else {
+			m_control = nullptr;
+		}
+	}
+	template<typename T>
 	inline Shared_ptr<T>::Shared_ptr(const Shared_ptr& other)
 		:m_control(other.m_control)
 	{
@@ -152,6 +163,12 @@ namespace MyPointer {
 	inline size_t Shared_ptr<T>::useCount() const
 	{
 		return m_control ? m_control->m_useCount : 0;;
+	}
+
+	template<typename T>
+	inline size_t Shared_ptr<T>::weakCount() const
+	{
+		return m_control ? m_control->m_weakCount : 0;;
 	}
 
 	template<typename T>
@@ -208,6 +225,79 @@ namespace MyPointer {
 	{
 		if (m_control) {
 			if (--m_control->m_useCount == 0) {
+				delete m_control;
+			}
+			m_control = nullptr;
+		}
+	}
+	template<typename T>
+	inline Weak_ptr<T>::Weak_ptr(const Shared_ptr<T>& shared)
+		:m_control(shared.m_control)
+	{
+		if (m_control) {
+			++m_control->m_weakCount;
+		}
+	}
+	template<typename T>
+	inline Weak_ptr<T>::Weak_ptr(const Weak_ptr& other)
+		:m_control(other.m_control)
+	{
+		if (m_control) {
+			++m_control->m_weakCount;
+		}
+	}
+	template<typename T>
+	inline Weak_ptr<T>::Weak_ptr(Weak_ptr&& other) noexcept
+		:m_control(other.m_control)
+	{
+		other.m_control = nullptr;
+	}
+	template<typename T>
+	inline Weak_ptr<T>& Weak_ptr<T>::operator=(const Weak_ptr& other)
+	{
+		if (this != &other) {
+			release();
+			m_control = other.m_control;
+			if (m_control) {
+				++m_control->m_weakCount;
+			}
+		}
+		return *this;
+	}
+	template<typename T>
+	inline Weak_ptr<T>& Weak_ptr<T>::operator=(Weak_ptr&& other) noexcept
+	{
+		if (this != &other) {
+			release();
+			m_control = other.m_control;
+			other.m_control = nullptr;
+		}
+		return *this;
+	}
+	template<typename T>
+	inline Weak_ptr<T>::~Weak_ptr()
+	{
+		release();
+	}
+	template<typename T>
+	inline bool Weak_ptr<T>::expired() const
+	{
+		return !m_control || m_control->m_useCount == 0;
+	}
+	template<typename T>
+	inline Shared_ptr<T> Weak_ptr<T>::lock()
+	{
+		if (expired()) {
+			return Shared_ptr<T>();
+		}
+		return Shared_ptr<T>(*this);
+	}
+	template<typename T>
+	inline void Weak_ptr<T>::release()
+	{
+		if (m_control) {
+			--m_control->m_weakCount;
+			if (m_control->m_useCount == 0 && m_control->m_weakCount == 0) {
 				delete m_control;
 			}
 			m_control = nullptr;
